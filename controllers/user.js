@@ -60,15 +60,14 @@ const patchUser = (req,res)=>{
 
 const deleteUser = async(req,res = response)=>{
 
-    const {id}=req.params;
-
-    //Borrado fisico
-    // const user = await User.findByIdAndDelete(id);
+    const {id} = req.params;
 
     const user = await User.findByIdAndUpdate(id, {state: false});
-
+    const authUser = req.authUser;
+    
     res.json({
-        user
+        user,
+        authUser
     });
 }
 
