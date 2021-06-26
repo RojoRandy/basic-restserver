@@ -1,16 +1,14 @@
 const { response } = require("express");
-const {Category} = require('../models')
+const {Category} = require('../models');
 
 
 //TODO: getCategory - populate
 const getCategory = async(req, res=response)=>{
 
     const {id} = req.params;
-    const category = await Category.findById(id).populate('user');
+    const category = await Category.findById(id).populate('user','name');
 
-    res.json({
-        category
-    })
+    res.json(category)
 }
 
 //TODO: getCategories - paginate - total - populate (mongoose)
@@ -22,7 +20,7 @@ const getCategories = async(req, res=response)=>{
     const [total, categories] = await Promise.all([
         Category.countDocuments(query),
         Category.find(query)
-                .populate('user')
+                .populate('user','name')
                 .skip(Number(skip))
                 .limit(Number(limit))
     ]);
@@ -68,16 +66,37 @@ const createCategory = async(req,res=response) =>{
 
 //TODO: updateCategory - validate name duplicated
 const updateCategory = async(req, res=response)=>{
-    res.json({
-        msg: 'UPDATE CATEGORY'
-    })
+    
+    const {id} = req.params;
+    const {name} = req.body;
+
+    const data = {
+        name: name.toUpperCase(),
+        user: req.authUser._id
+    }
+
+    const categoryExists = await Category.findOne({name});
+    
+    if(categoryExists){
+        return res.status(400).json({
+            msg: `El nombre de la categoria ${categoryExists.name} ya existe`
+        });
+    }
+    
+    
+    const category = await Category.findByIdAndUpdate(id, data, {new: true}).populate('user','name');
+
+    res.json(category)
 }
 
 //TODO: deleteCategory - logic
 const deleteCategory = async(req, res=response)=>{
-    res.json({
-        msg: 'DELETE CATEGORY'
-    })
+
+    const {id} = req.params;
+
+    const category = await Category.findByIdAndUpdate(id,{state:false},{new:true});
+
+    res.json(category)
 }
 
 module.exports = {
