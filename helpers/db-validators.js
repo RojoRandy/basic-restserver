@@ -28,6 +28,14 @@ const categoryByIdExists = async(id)=>{
     }
 }
 
+const categoryByNameExists = async(category='')=>{
+    const categoryName=category.toUpperCase();
+    const categoryExists = await Category.findOne({name:categoryName, state:true});
+    if(!categoryExists){
+        throw new Error(`No existe la categoría ${category}, debe crearse primero para poder registrar un producto de esa categoría`);
+    }
+}
+
 const productByIdExists = async(id)=>{
     const productExists = await Product.findById(id);
     if(!productExists){
@@ -35,10 +43,19 @@ const productByIdExists = async(id)=>{
     }
 }
 
+const productByNameExists = async(name='')=>{
+    const productExists = await Product.findOne({name, state:true});
+    if(productExists){
+        throw new Error(`Ya existe un producto con el nombre ${productExists.name}`);
+    }
+}
+
 module.exports = {
-    isValidRole,
-    emailExists,
-    userByIdExists,
     categoryByIdExists,
-    productByIdExists
+    categoryByNameExists,
+    emailExists,
+    isValidRole,
+    productByIdExists,
+    productByNameExists,
+    userByIdExists
 }

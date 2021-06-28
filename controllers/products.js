@@ -18,7 +18,7 @@ const getProducts = async(req, res=response)=>{
     const query = {state:true};
 
     const [total, products] = await Promise.all([
-        s.countDocuments(query),
+        Product.countDocuments(query),
         Product.find(query)
                 .populate('user','name')
                 .populate('category','name')
@@ -35,35 +35,16 @@ const getProducts = async(req, res=response)=>{
 const createProduct = async(req,res=response) =>{
 
     try {
-        const {name,price,category,description, available} = req.body;
-        
-        const productExists = await Products.findOne({name});
-
-        if(productExists){
-            res.status(400).json({
-                msg:`Ya existe un producto con el nombre ${productExists.name}`
-            })
-        }
-
-        const categoryExists = await Category.findOne({category});
-
-        if(!categoryExists){
-            res.status(400).json({
-                msg: `No existe la categoría ${category}, debe crearse primero para poder registrar un producto de esa categoría`
-            })
-        }
+        const {state, user ,...body} = req.body;
 
         const data = {
-            name,
+            name: body.name.toUpperCase(),
             user: req.authUser._id,
-            price,
-            category: categoryExists._id,
-            description,
-            available
+            ...body
         }
 
         const product = new Product(data);
-        product.save();
+        await product.save();
 
         return res.json(product);
         
@@ -77,9 +58,28 @@ const createProduct = async(req,res=response) =>{
 
 const updateProduct = async(req, res=response)=>{
     
-    res.json({
-        msg: "UPDATE"
-    })
+    try {
+        const {id} = req.params;
+        const {state, user ,...data} = req.body;
+
+        const categoryDB = await Category.findOne({name:category})
+
+        if(data.name){
+            data.name = data.name.toUpperCase();
+        }
+
+        data.user = req.authUser._id;
+
+        const product = await Product.findByIdAndUpdate(id, data, {new:true})
+                                    .populate('user','name')
+                                    .populate('category','name');
+
+        return res.json(product);
+    } catch (error) {
+        return res.status(400).json({
+            msg: `No se pudo actualizar el producto`
+        });        
+    }
 }
 
 //TODO: deleteCategory - logic
@@ -89,7 +89,7 @@ const deleteProduct = async(req, res=response)=>{
 
     const product = await Product.findByIdAndUpdate(id,{state:false},{new:true});
 
-    res.json(product)
+    return res.json(product)
 }
 
 module.exports = {
