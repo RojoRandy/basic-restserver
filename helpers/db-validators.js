@@ -50,7 +50,18 @@ const productByNameExists = async(name='')=>{
     }
 }
 
+const allowedCollection = (collection='', allowedCollection = []) =>{
+    const isIncluded = allowedCollection.includes(collection);
+
+    if(!isIncluded){
+        throw new Error(`La colección ${collection} no es permitida. Colecciones permitidas: ${allowedCollection}`)
+    }
+
+    return true;
+}
+
 module.exports = {
+    allowedCollection,
     categoryByIdExists,
     categoryByNameExists,
     emailExists,
